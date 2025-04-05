@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decisions - AI Media Buying Agent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">AI Media Buying Agent</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documents-view">Documents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/decisions-view">Decisions</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">AI Decisions</li>
+                    </ol>
+                </nav>
+                <h1>AI Decisions</h1>
+                <p class="lead">Review and manage AI-generated decisions for your campaigns</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Pending Decisions</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshDecisions()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="pendingDecisionsContainer">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Decision History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="decisionHistoryContainer">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decision Details Modal -->
+    <div class="modal fade" id="decisionDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Decision Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="decisionDetailsBody">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" id="decisionDetailsFooter">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light">
+        <div class="container text-center">
+            <p>&copy; 2025 AI Media Buying Agent</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load decisions on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDecisions();
+        });
+        
+        // Load decisions
+        function loadDecisions() {
+            fetch('/decisions')
+                .then(response => response.json())
+                .then(data => {
+                    // Filter pending decisions
+                    const pendingDecisions = data.filter(decision => 
+                        decision.status === 'pending_approval');
+                    
+                    // Filter executed and rejected decisions
+                    const historyDecisions = data.filter(decision => 
+                        decision.status === 'executed' || decision.status === 'rejected');
+                    
+                    renderPendingDecisions(pendingDecisions);
+                    renderDecisionHistory(historyDecisions);
+                })
+                .catch(error => {
+                    console.error('Error loading decisions:', error);
+                    document.getElementById('pendingDecisionsContainer').innerHTML = 
+                        '<div class="alert alert-danger">Error loading decisions. Please try again.</div>';
+                    document.getElementById('decisionHistoryContainer').innerHTML = 
+                        '<div class="alert alert-danger">Error loading decision history. Please try again.</div>';
+                });
+        }
+        
+        // Render pending decisions
+        function renderPendingDecisions(decisions) {
+            const container = document.getElementById('pendingDecisionsContainer');
+            
+            if (decisions.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No pending decisions found.</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Reasoning</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            decisions.forEach(decision => {
+                html += `
+                    <tr>
+                        <td>${formatDecisionType(decision.decision_type)}</td>
+                        <td>${decision.reasoning || 'No reasoning provided'}</td>
+                        <td>${new Date(decision.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showDecisionDetails('${decision.id}')">
+                                Details
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="approveDecision('${decision.id}')">
+                                Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectDecision('${decision.id}')">
+                                Reject
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Render decision history
+        function renderDecisionHistory(decisions) {
+            const container = document.getElementById('decisionHistoryContainer');
+            
+            if (decisions.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No decision history found.</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Reasoning</th>
+                                <th>Created</th>
+                                <th>Executed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            decisions.forEach(decision => {
+                const statusClass = decision.status === 'executed' ? 'success' : 'danger';
+                
+                html += `
+                    <tr>
+                        <td>${formatDecisionType(decision.decision_type)}</td>
+                        <td><span class="badge bg-${statusClass}">${decision.status}</span></td>
+                        <td>${decision.reasoning || 'No reasoning provided'}</td>
+                        <td>${new Date(decision.created_at).toLocaleString()}</td>
+                        <td>${decision.executed_at ? new Date(decision.executed_at).toLocaleString() : 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showDecisionDetails('${decision.id}')">
+                                Details
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Format decision type
+        function formatDecisionType(type) {
+            switch (type) {
+                case 'adjust_budget':
+                    return 'Budget Adjustment';
+                case 'toggle_adset':
+                    return 'Ad Set Toggle';
+                case 'create_campaign':
+                    return 'Campaign Creation';
+                default:
+                    return type;
+            }
+        }
+        
+        // Show decision details
+        function showDecisionDetails(decisionId) {
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('decisionDetailsModal'));
+            modal.show();
+            
+            // Load decision details
+            fetch(`/decisions/${decisionId}`)
+                .then(response => response.json())
+                .then(decision => {
+                    const detailsBody = document.getElementById('decisionDetailsBody');
+                    const detailsFooter = document.getElementById('decisionDetailsFooter');
+                    
+                    // Format details
+                    let details = `
+                        <h6>Decision Type: ${formatDecisionType(decision.decision_type)}</h6>
+                        <p><strong>Status:</strong> ${decision.status}</p>
+                        <p><strong>Reasoning:</strong> ${decision.reasoning || 'No reasoning provided'}</p>
+                        <p><strong>Created:</strong> ${new Date(decision.created_at).toLocaleString()}</p>
+                        <p><strong>Executed:</strong> ${decision.executed_at ? new Date(decision.executed_at).toLocaleString() : 'N/A'}</p>
+                        
+                        <h6>Details:</h6>
+                        <pre class="bg-light p-3">${JSON.stringify(decision.decision_details, null, 2)}</pre>
+                    `;
+                    
+                    detailsBody.innerHTML = details;
+                    
+                    // Update footer buttons based on status
+                    if (decision.status === 'pending_approval') {
+                        detailsFooter.innerHTML = `
+                            <button type="button" class="btn btn-success" onclick="approveDecision('${decision.id}')">Approve</button>
+                            <button type="button" class="btn btn-danger" onclick="rejectDecision('${decision.id}')">Reject</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        `;
+                    } else {
+                        detailsFooter.innerHTML = `
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading decision details:', error);
+                    document.getElementById('decisionDetailsBody').innerHTML = 
+                        '<div class="alert alert-danger">Error loading decision details. Please try again.</div>';
+                });
+        }
+        
+        // Approve decision
+        function approveDecision(decisionId) {
+            fetch(`/decisions/${decisionId}/approve`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Close modal if open
+                const modalElement = document.getElementById('decisionDetailsModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Refresh decisions
+                refreshDecisions();
+                
+                // Show success message
+                alert('Decision approved successfully!');
+            })
+            .catch(error => {
+                console.error('Error approving decision:', error);
+                alert('Error approving decision. Please try again.');
+            });
+        }
+        
+        // Reject decision
+        function rejectDecision(decisionId) {
+            fetch(`/decisions/${decisionId}/reject`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Close modal if open
+                const modalElement = document.getElementById('decisionDetailsModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Refresh decisions
+                refreshDecisions();
+                
+                // Show success message
+                alert('Decision rejected successfully!');
+            })
+            .catch(error => {
+                console.error('Error rejecting decision:', error);
+                alert('Error rejecting decision. Please try again.');
+            });
+        }
+        
+        // Refresh decisions
+        function refreshDecisions() {
+            document.getElementById('pendingDecisionsContainer').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('decisionHistoryContainer').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            loadDecisions();
+        }
+    </script>
+</body>
+</html>

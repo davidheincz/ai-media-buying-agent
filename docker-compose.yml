@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  document_processor:
+    build:
+      context: ./document_processor
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/media_buying_agent
+    depends_on:
+      - db
+    volumes:
+      - document_data:/app/data
+    restart: always
+
+  facebook_ads_manager:
+    build:
+      context: ./facebook_ads_manager
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/media_buying_agent
+    depends_on:
+      - db
+    restart: always
+
+  ai_integration:
+    build:
+      context: ./ai_integration
+    ports:
+      - "8002:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/media_buying_agent
+      - DOCUMENT_PROCESSOR_URL=http://document_processor:8000
+      - FACEBOOK_ADS_MANAGER_URL=http://facebook_ads_manager:8000
+      - POE_API_KEY=${POE_API_KEY}
+    depends_on:
+      - document_processor
+      - facebook_ads_manager
+      - db
+    restart: always
+
+  web_application:
+    build:
+      context: ./web_application
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/media_buying_agent
+      - DOCUMENT_PROCESSOR_URL=http://document_processor:8000
+      - FACEBOOK_ADS_MANAGER_URL=http://facebook_ads_manager:8000
+      - AI_INTEGRATION_URL=http://ai_integration:8000
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - document_processor
+      - facebook_ads_manager
+      - ai_integration
+      - db
+    restart: always
+
+  db:
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=media_buying_agent
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
+  document_data:

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaigns - AI Media Buying Agent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">AI Media Buying Agent</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Campaigns</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documents-view">Documents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/decisions-view">Decisions</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Campaigns</li>
+                    </ol>
+                </nav>
+                <h1>Campaigns</h1>
+                <p class="lead">Manage your Facebook Ad campaigns for {{ account.name or account.fb_account_id }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Campaigns</h5>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm" onclick="refreshCampaigns()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                                <i class="bi bi-plus-circle"></i> Create Campaign
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="campaignsContainer">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Performance Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="performanceOverview">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Campaign Modal -->
+    <div class="modal fade" id="createCampaignModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Campaign</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createCampaignForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="campaignName" class="form-label">Campaign Name</label>
+                            <input type="text" class="form-control" id="campaignName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaignObjective" class="form-label">Objective</label>
+                            <select class="form-select" id="campaignObjective" name="objective" required>
+                                <option value="CONVERSIONS">Conversions</option>
+                                <option value="TRAFFIC">Traffic</option>
+                                <option value="REACH">Reach</option>
+                                <option value="BRAND_AWARENESS">Brand Awareness</option>
+                                <option value="APP_INSTALLS">App Installs</option>
+                                <option value="LEAD_GENERATION">Lead Generation</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaignBudget" class="form-label">Daily Budget (USD)</label>
+                            <input type="number" class="form-control" id="campaignBudget" name="daily_budget" min="1" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaignStatus" class="form-label">Status</label>
+                            <select class="form-select" id="campaignStatus" name="status" required>
+                                <option value="PAUSED">Paused</option>
+                                <option value="ACTIVE">Active</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light">
+        <div class="container text-center">
+            <p>&copy; 2025 AI Media Buying Agent</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const accountId = '{{ account.id }}';
+        let campaignsData = [];
+        
+        // Load campaigns on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCampaigns();
+        });
+        
+        // Load campaigns
+        function loadCampaigns() {
+            fetch(`/campaigns?account_id=${accountId}`)
+                .then(response => response.json())
+                .then(data => {
+                    campaignsData = data;
+                    renderCampaigns(data);
+                    loadPerformanceOverview();
+                })
+                .catch(error => {
+                    console.error('Error loading campaigns:', error);
+                    document.getElementById('campaignsContainer').innerHTML = 
+                        '<div class="alert alert-danger">Error loading campaigns. Please try again.</div>';
+                });
+        }
+        
+        // Render campaigns table
+        function renderCampaigns(campaigns) {
+            const container = document.getElementById('campaignsContainer');
+            
+            if (campaigns.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No campaigns found. Create your first campaign to get started.</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Objective</th>
+                                <th>Status</th>
+                                <th>Daily Budget</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            campaigns.forEach(campaign => {
+                const statusClass = campaign.status === 'ACTIVE' ? 'success' : 
+                                   campaign.status === 'PAUSED' ? 'warning' : 'secondary';
+                
+                html += `
+                    <tr>
+                        <td>${campaign.name}</td>
+                        <td>${campaign.objective || 'N/A'}</td>
+                        <td><span class="badge bg-${statusClass}">${campaign.status}</span></td>
+                        <td>$${campaign.daily_budget ? campaign.daily_budget.toFixed(2) : '0.00'}</td>
+                        <td>
+                            <a href="/adsets-view?campaign_id=${campaign.id}" class="btn btn-sm btn-outline-primary">View Ad Sets</a>
+                            <button class="btn btn-sm btn-outline-${campaign.status === 'ACTIVE' ? 'warning' : 'success'}" 
+                                    onclick="toggleCampaignStatus('${campaign.id}', '${campaign.status}')">
+                                ${campaign.status === 'ACTIVE' ? 'Pause' : 'Activate'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Load performance overview
+        function loadPerformanceOverview() {
+            // Get campaign IDs
+            const campaignIds = campaignsData.map(campaign => campaign.id);
+            
+            if (campaignIds.length === 0) {
+                document.getElementById('performanceOverview').innerHTML = 
+                    '<div class="alert alert-info">No campaigns available for performance overview.</div>';
+                return;
+            }
+            
+            // Create metrics containers
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Impressions</h6>
+                                <div id="totalImpressions" class="h3">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Clicks</h6>
+                                <div id="totalClicks" class="h3">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Conversions</h6>
+                                <div id="totalConversions" class="h3">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Spend</h6>
+                                <div id="totalSpend" class="h3">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="cpaChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="ctrChart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('performanceOverview').innerHTML = html;
+            
+            // Load metrics for each campaign
+            let totalImpressions = 0;
+            let totalClicks = 0;
+            let totalConversions = 0;
+            let totalSpend = 0;
+            let campaignNames = [];
+            let cpas = [];
+            let ctrs = [];
+            
+            const promises = campaignIds.map(campaignId => 
+                fetch(`/campaigns/${campaignId}/metrics`)
+                    .then(response => response.json())
+            );
+            
+            Promise.all(promises)
+                .then(results => {
+                    results.forEach((metrics, index) => {
+                        const campaign = campaignsData[index];
+                        
+                        totalImpressions += metrics.impressions || 0;
+                        totalClicks += metrics.clicks || 0;
+                        totalConversions += metrics.conversions || 0;
+                        totalSpend += metrics.spend || 0;
+                        
+                        campaignNames.push(campaign.name);
+                        cpas.push(metrics.cpa || 0);
+                        ctrs.push(metrics.ctr || 0);
+                    });
+                    
+                    // Update summary metrics
+                    document.getElementById('totalImpressions').textContent = totalImpressions.toLocaleString();
+                    document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+                    document.getElementById('totalConversions').textContent = totalConversions.toLocaleString();
+                    document.getElementById('totalSpend').textContent = '$' + totalSpend.toFixed(2);
+                    
+                    // Create CPA chart
+                    const cpaCtx = document.getElementById('cpaChart').getContext('2d');
+                    new Chart(cpaCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: campaignNames,
+                            datasets: [{
+                                label: 'Cost Per Acquisition (CPA)',
+                                data: cpas,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Cost Per Acquisition by Campaign'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toFixed(2);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Create CTR chart
+                    const ctrCtx = document.getElementById('ctrChart').getContext('2d');
+                    new Chart(ctrCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: campaignNames,
+                            datasets: [{
+                                label: 'Click-Through Rate (CTR)',
+                                data: ctrs,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Click-Through Rate by Campaign'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading performance metrics:', error);
+                    document.getElementById('performanceOverview').innerHTML = 
+                        '<div class="alert alert-danger">Error loading performance metrics. Please try again.</div>';
+                });
+        }
+        
+        // Toggle campaign status
+        function toggleCampaignStatus(campaignId, currentStatus) {
+            const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+            
+            fetch(`/campaigns/${campaignId}/status?status=${newStatus}`, {
+                method: 'PUT'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Refresh campaigns
+                loadCampaigns();
+            })
+            .catch(error => {
+                console.error('Error toggling campaign status:', error);
+                alert('Error toggling campaign status. Please try again.');
+            });
+        }
+        
+        // Refresh campaigns
+        function refreshCampaigns() {
+            document.getElementById('campaignsContainer').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('performanceOverview').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            loadCampaigns();
+        }
+        
+        // Create campaign form
+        document.getElementById('createCampaignForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const campaignData = {
+                name: formData.get('name'),
+                objective: formData.get('objective'),
+                status: formData.get('status'),
+                daily_budget: parseFloat(formData.get('daily_budget'))
+            };
+            
+            fetch(`/accounts/${accountId}/campaigns/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(campaignData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Close modal and refresh campaigns
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createCampaignModal'));
+                modal.hide();
+                refreshCampaigns();
+            })
+            .catch(error => {
+                console.error('Error creating campaign:', error);
+                alert('Error creating campaign. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>
