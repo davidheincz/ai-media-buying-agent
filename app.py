@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -6,6 +6,8 @@ import os
 from datetime import datetime
 import json
 from models import db, User, AdAccount, Campaign, AdSet, CampaignMetric, Document, KnowledgeItem, Decision
+import os
+from deepseek_integration.integration import AIMediaBuyingAgent
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
@@ -47,6 +49,15 @@ app.cli.add_command(init_db_command)
 # Then add this to ensure tables are created when the app starts
 with app.app_context():
     db.create_all()
+
+# Initialize the AI Media Buying Agent
+try:
+    ai_agent = AIMediaBuyingAgent(
+        deepseek_api_key=os.environ.get('DEEPSEEK_API_KEY')
+    )
+except Exception as e:
+    app.logger.error(f"Error initializing AI Media Buying Agent: {str(e)}")
+    ai_agent = None
 
 # Routes
 @app.route('/')
@@ -167,6 +178,25 @@ def campaigns():
     
     return render_template('campaigns.html', account=account, campaigns=campaigns)
 
+@app.route('/evaluate_campaign/<campaign_id>', methods=['GET'])
+@login_required
+def evaluate_campaign(campaign_id):
+    if not ai_agent:
+        flash('AI agent not initialized')
+        return redirect(url_for('campaigns'))
+        
+    # Get ad account ID from session or database
+    ad_account_id = session.get('ad_account_id', 'act_123456789')  # Default or from session
+    
+    # Evaluate campaign with AI
+    recommendations = ai_agent.evaluate_campaign(campaign_id, ad_account_id)
+    
+    return render_template(
+        'campaign_recommendations.html',
+        campaign_id=campaign_id,
+        recommendations=recommendations
+    )
+
 @app.route('/documents')
 @login_required
 def documents():
@@ -206,6 +236,41 @@ def upload_document():
         
         # In a real implementation, we would process the document here
         # and extract knowledge items
+        
+    return redirect(url_for('documents'))
+
+@app.route('/process_document', methods=['POST'])
+@login_required
+def process_document():
+    if 'document' not in request.files:
+        flash('No document part')
+        return redirect(request.url)
+    
+    file = request.files['document']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+        
+    if file and ai_agent:
+        # Read document content
+        document_text = file.read().decode('utf-8')
+        document_name = file.filename
+        
+        # Process document with AI
+        knowledge_items = ai_agent.process_document(document_text, document_name)
+        
+        # Save document to database
+        document = Document(
+            title=document_name,
+            content=document_text,
+            user_id=current_user.id
+        )
+        db.session.add(document)
+        db.session.commit()
+        
+        flash(f'Document processed successfully. Extracted {len(knowledge_items)} knowledge items.')
+    else:
+        flash('AI agent not initialized or file error')
         
     return redirect(url_for('documents'))
 
