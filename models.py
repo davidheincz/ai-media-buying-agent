@@ -53,6 +53,22 @@ class AdSet(db.Model):
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Ad(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    facebook_ad_id = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    headline = db.Column(db.String(100), nullable=True)
+    primary_text = db.Column(db.Text, nullable=True)
+    description = db.Column(db.String(200), nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)
+    call_to_action = db.Column(db.String(50), nullable=True)
+    adset_id = db.Column(db.Integer, db.ForeignKey('ad_set.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    performance = db.relationship('AdPerformance', backref='ad', lazy=True)
+
 class CampaignMetric(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
