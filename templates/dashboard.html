@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Media Buying Agent{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Connected Accounts</h5>
+            </div>
+            <div class="card-body">
+                {% if accounts %}
+                <div class="list-group">
+                    {% for account in accounts %}
+                    <a href="{{ url_for('campaigns', account_id=account.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ account.name }}</h5>
+                        </div>
+                        <p class="mb-1">Account ID: {{ account.facebook_account_id }}</p>
+                        <small>
+                            {% if account.target_cpa %}Target CPA: ${{ account.target_cpa }}{% endif %}
+                            {% if account.target_cpl %}Target CPL: ${{ account.target_cpl }}{% endif %}
+                        </small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No accounts connected yet.</p>
+                <a href="{{ url_for('connect_facebook') }}" class="btn btn-primary">Connect Facebook Ads Account</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent AI Decisions</h5>
+            </div>
+            <div class="card-body">
+                {% if decisions %}
+                <div class="list-group">
+                    {% for decision in decisions %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ decision.type|replace('_', ' ')|title }}</h5>
+                            <small>{{ decision.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ decision.entity_name }}</p>
+                        <p class="mb-1">{{ decision.reason }}</p>
+                        <small class="text-muted">Status: {{ decision.status|title }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No recent decisions.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Knowledge Base</h5>
+            </div>
+            <div class="card-body">
+                <p>Upload documents to build your knowledge base and train the AI.</p>
+                <a href="{{ url_for('documents') }}" class="btn btn-primary">Manage Documents</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
