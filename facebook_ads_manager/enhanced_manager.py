@@ -1227,3 +1227,12 @@ class MetaAPIClient:
         )
         
         return results
+
+
+# Add the required MetaMarketingAPIClient class that's imported in routes.py
+class MetaMarketingAPIClient:
+    """Client for Meta Marketing API with additional functionality for the media buying agent."""
+    
+    def __init__(self, access_token=None, ad_account_id=None, app_id=None, app_secret=None):
+        self.access_token = access_token
+        self.ad_account_id = ad_account_id
