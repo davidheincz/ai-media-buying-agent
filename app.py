@@ -27,8 +27,19 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Create database tables
-@app.before_first_request
-def create_tables():
+from flask.cli import with_appcontext
+import click
+
+@click.command('init-db')
+@with_appcontext
+def init_db_command():
+    db.create_all()
+    click.echo('Initialized the database.')
+
+app.cli.add_command(init_db_command)
+
+# Then add this to ensure tables are created when the app starts
+with app.app_context():
     db.create_all()
 
 # Routes
