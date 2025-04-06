@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Campaign Recommendations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Campaign Recommendations</h2>
+    <div class="card">
+        <div class="card-header">
+            Campaign ID: {{ campaign_id }}
+        </div>
+        <div class="card-body">
+            {% if recommendations.error %}
+                <div class="alert alert-danger">{{ recommendations.error }}</div>
+            {% else %}
+                <h5>Budget Adjustment</h5>
+                <div class="alert alert-info">
+                    {{ recommendations.budget_adjustment.action|capitalize }} budget by 
+                    {{ (recommendations.budget_adjustment.amount * 100)|int }}%
+                    <br>
+                    <small>Reason: {{ recommendations.budget_adjustment.reason }}</small>
+                </div>
+                
+                <h5>Ad Set Actions</h5>
+                <ul class="list-group">
+                {% for action in recommendations.ad_set_actions %}
+                    <li class="list-group-item">
+                        {{ action.action|capitalize }} ad set {{ action.ad_set_id }}
+                        {% if action.amount %}
+                        by {{ (action.amount * 100)|int }}%
+                        {% endif %}
+                        <br>
+                        <small>Reason: {{ action.reason }}</small>
+                    </li>
+                {% endfor %}
+                </ul>
+                
+                <h5>Targeting Recommendations</h5>
+                <ul class="list-group">
+                {% for rec in recommendations.targeting_recommendations %}
+                    <li class="list-group-item">{{ rec }}</li>
+                {% endfor %}
+                </ul>
+                
+                <h5>Creative Recommendations</h5>
+                <ul class="list-group">
+                {% for rec in recommendations.creative_recommendations %}
+                    <li class="list-group-item">{{ rec }}</li>
+                {% endfor %}
+                </ul>
+                
+                <h5>Bidding Recommendations</h5>
+                <ul class="list-group">
+                {% for rec in recommendations.bidding_recommendations %}
+                    <li class="list-group-item">{{ rec }}</li>
+                {% endfor %}
+                </ul>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('execute_decision', campaign_id=campaign_id) }}" class="btn btn-primary">Apply Recommendations</a>
+                    <a href="{{ url_for('campaigns') }}" class="btn btn-secondary">Back to Campaigns</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
