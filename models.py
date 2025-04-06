@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     documents = db.relationship('Document', backref='user', lazy=True)
 
 class AdAccount(db.Model):
+    __tablename__ = 'ad_account'  # Added explicit table name
     id = db.Column(db.Integer, primary_key=True)
     facebook_account_id = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -31,10 +32,14 @@ class AdAccount(db.Model):
     campaigns = db.relationship('Campaign', backref='account', lazy=True)
 
 class Campaign(db.Model):
+    __tablename__ = 'campaign'  # Added explicit table name
     id = db.Column(db.Integer, primary_key=True)
     facebook_campaign_id = db.Column(db.String(100), nullable=False)
+    # Add campaign_id as an alias to match what routes.py expects
+    campaign_id = db.Column(db.String(100), nullable=True)
     name = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(50), nullable=False)
+    objective = db.Column(db.String(50), nullable=True)  # Added objective field
     daily_budget = db.Column(db.Float, nullable=True)
     lifetime_budget = db.Column(db.Float, nullable=True)
     account_id = db.Column(db.Integer, db.ForeignKey('ad_account.id'), nullable=False)
@@ -45,6 +50,7 @@ class Campaign(db.Model):
     metrics = db.relationship('CampaignMetric', backref='campaign', lazy=True)
 
 class AdSet(db.Model):
+    __tablename__ = 'ad_set'  # Added explicit table name
     id = db.Column(db.Integer, primary_key=True)
     facebook_adset_id = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -54,6 +60,7 @@ class AdSet(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Ad(db.Model):
+    __tablename__ = 'ad'  # Added explicit table name
     id = db.Column(db.Integer, primary_key=True)
     facebook_ad_id = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -68,6 +75,21 @@ class Ad(db.Model):
     
     # Relationships
     performance = db.relationship('AdPerformance', backref='ad', lazy=True)
+
+# Added missing AdPerformance model
+class AdPerformance(db.Model):
+    __tablename__ = 'ad_performance'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    impressions = db.Column(db.Integer, nullable=True)
+    clicks = db.Column(db.Integer, nullable=True)
+    spend = db.Column(db.Float, nullable=True)
+    conversions = db.Column(db.Integer, nullable=True)
+    ctr = db.Column(db.Float, nullable=True)  # Click-through rate
+    cpc = db.Column(db.Float, nullable=True)  # Cost per click
+    cpm = db.Column(db.Float, nullable=True)  # Cost per thousand impressions
+    ad_id = db.Column(db.Integer, db.ForeignKey('ad.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class CampaignMetric(db.Model):
     id = db.Column(db.Integer, primary_key=True)
