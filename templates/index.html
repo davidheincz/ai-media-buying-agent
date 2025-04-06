@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content_public %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="text-center">AI Media Buying Agent</h1>
+            </div>
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Welcome to your AI-driven media buying assistant</h2>
+                <p class="card-text">
+                    This platform connects to your Facebook Ads accounts and uses AI to automatically manage your campaigns based on your knowledge base.
+                </p>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Key Features</h5>
+                                <ul>
+                                    <li>Connect to Facebook Ads API</li>
+                                    <li>Upload documents to build your knowledge base</li>
+                                    <li>AI-driven campaign optimization</li>
+                                    <li>Automated budget adjustments</li>
+                                    <li>Performance tracking and reporting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Get Started</h5>
+                                <p>Create an account or log in to start managing your campaigns with AI.</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary">Register</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
