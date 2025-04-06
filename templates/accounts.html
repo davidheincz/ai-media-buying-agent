@@ -1,171 +1,168 @@
 {% extends "base.html" %}
 
-{% block title %}Ad Accounts{% endblock %}
+{% block title %}Ad Accounts - AI Media Buying Agent{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Facebook Ad Accounts</h2>
-    
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Your Ad Accounts</span>
-            <a href="{{ url_for('connect_facebook') }}" class="btn btn-sm btn-primary">
-                <i class="fab fa-facebook mr-2"></i> Connect More Accounts
-            </a>
-        </div>
-        <div class="card-body">
-            {% if accounts %}
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Account Name</th>
-                                <th>Account ID</th>
-                                <th>Status</th>
-                                <th>Campaigns</th>
-                                <th>Daily Spend</th>
-                                <th>Target KPI</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for account in accounts %}
-                            <tr>
-                                <td>{{ account.name }}</td>
-                                <td>{{ account.id }}</td>
-                                <td>
-                                    <span class="badge {% if account.status == 'ACTIVE' %}bg-success{% else %}bg-warning{% endif %}">
-                                        {{ account.status }}
-                                    </span>
-                                </td>
-                                <td>{{ account.campaign_count }}</td>
-                                <td>${{ account.daily_spend|default('0.00', true) }}</td>
-                                <td>
-                                    {% if account.target_kpi %}
-                                        {{ account.target_kpi_type }}: ${{ account.target_kpi }}
-                                    {% else %}
-                                        Not set
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ url_for('view_account', account_id=account.id) }}" class="btn btn-sm btn-info">View</a>
-                                        <a href="{{ url_for('edit_account', account_id=account.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                        <a href="{{ url_for('disconnect_account', account_id=account.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to disconnect this account?');">Disconnect</a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info">
-                    <p>You don't have any connected Facebook Ad accounts yet.</p>
-                    <a href="{{ url_for('connect_facebook') }}" class="btn btn-primary">
-                        <i class="fab fa-facebook mr-2"></i> Connect to Facebook
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Account Performance Overview -->
-    {% if accounts %}
-    <div class="card mt-4">
-        <div class="card-header">
-            Performance Overview
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Total Accounts</h5>
-                            <p class="card-text display-6">{{ accounts|length }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Total Campaigns</h5>
-                            <p class="card-text display-6">{{ total_campaigns|default('0', true) }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Daily Spend</h5>
-                            <p class="card-text display-6">${{ total_spend|default('0.00', true) }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Avg. CPA</h5>
-                            <p class="card-text display-6">${{ avg_cpa|default('0.00', true) }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- KPI Settings -->
-    <div class="card mt-4">
-        <div class="card-header">
-            KPI Settings
-        </div>
-        <div class="card-body">
-            <p>Set target KPIs for each of your ad accounts to help the AI optimize your campaigns.</p>
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Facebook Ad Accounts</h1>
             
-            <form action="{{ url_for('update_kpi_settings') }}" method="post">
-                {% if accounts %}
-                    {% for account in accounts %}
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            {{ account.name }} ({{ account.id }})
+            {% if accounts %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Your Connected Ad Accounts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Account Name</th>
+                                        <th>Account ID</th>
+                                        <th>Status</th>
+                                        <th>Performance</th>
+                                        <th>KPI Target</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for account in accounts %}
+                                        <tr>
+                                            <td>{{ account.name }}</td>
+                                            <td>{{ account.account_id }}</td>
+                                            <td>
+                                                <span class="badge bg-success">Active</span>
+                                            </td>
+                                            <td>
+                                                {% if account.performance %}
+                                                    <div>CPA: ${{ account.performance.cpa|round(2) }}</div>
+                                                    <div>CPL: ${{ account.performance.cpl|round(2) }}</div>
+                                                    <div>Spend: ${{ account.performance.spend|round(2) }}</div>
+                                                {% else %}
+                                                    <span class="text-muted">No data</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if account.kpi_target %}
+                                                    <div>Target CPA: ${{ account.kpi_target.cpa|round(2) }}</div>
+                                                    <div>Target CPL: ${{ account.kpi_target.cpl|round(2) }}</div>
+                                                {% else %}
+                                                    <span class="text-muted">Not set</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('meta_api.campaigns', account_id=account.account_id) }}" class="btn btn-sm btn-primary">View Campaigns</a>
+                                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="{{ url_for('meta_api.set_kpi_target', account_id=account.account_id) }}">Set KPI Target</a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('meta_api.optimize_account', account_id=account.account_id) }}">AI Optimize Account</a></li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('meta_api.disconnect_account', account_id=account.account_id) }}">Disconnect</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="kpi_type_{{ account.id }}">KPI Type</label>
-                                        <select class="form-control" id="kpi_type_{{ account.id }}" name="kpi_type_{{ account.id }}">
-                                            <option value="CPA" {% if account.target_kpi_type == 'CPA' %}selected{% endif %}>Cost Per Acquisition (CPA)</option>
-                                            <option value="CPL" {% if account.target_kpi_type == 'CPL' %}selected{% endif %}>Cost Per Lead (CPL)</option>
-                                            <option value="ROAS" {% if account.target_kpi_type == 'ROAS' %}selected{% endif %}>Return On Ad Spend (ROAS)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="kpi_value_{{ account.id }}">Target Value</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">$</span>
-                                            </div>
-                                            <input type="number" step="0.01" class="form-control" id="kpi_value_{{ account.id }}" name="kpi_value_{{ account.id }}" value="{{ account.target_kpi|default('', true) }}">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Account Performance Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <canvas id="performanceChart" width="400" height="300"></canvas>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Overall Performance</h5>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Total Spend:</div>
+                                            <div>${{ total_spend|round(2) }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Average CPA:</div>
+                                            <div>${{ avg_cpa|round(2) }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Average CPL:</div>
+                                            <div>${{ avg_cpl|round(2) }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Total Conversions:</div>
+                                            <div>{{ total_conversions }}</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
-                    
-                    <button type="submit" class="btn btn-primary">Save KPI Settings</button>
-                {% else %}
-                    <div class="alert alert-info">
-                        Connect to Facebook Ad accounts first to set KPI targets.
-                    </div>
-                {% endif %}
-            </form>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <p>You don't have any connected Facebook ad accounts. Please connect to Facebook first.</p>
+                    <a href="{{ url_for('meta_api.connect_facebook') }}" class="btn btn-primary">Connect to Facebook</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if accounts %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [{% for account in accounts %}'{{ account.name }}',{% endfor %}],
+                datasets: [{
+                    label: 'CPA ($)',
+                    data: [{% for account in accounts %}{{ account.performance.cpa if account.performance else 0 }},{% endfor %}],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'CPL ($)',
+                    data: [{% for account in accounts %}{{ account.performance.cpl if account.performance else 0 }},{% endfor %}],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Cost ($)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Ad Accounts'
+                        }
+                    }
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
+{% endblock %}
 {% endblock %}

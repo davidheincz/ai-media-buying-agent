@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Account Optimization - AI Media Buying Agent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.accounts') }}">Ad Accounts</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Account Optimization</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>AI Account Optimization for {{ account.name }}</h1>
+                <div>
+                    <span class="badge bg-primary">Account ID: {{ account.account_id }}</span>
+                </div>
+            </div>
+            
+            {% if optimization_status == 'in_progress' %}
+                <div class="alert alert-info">
+                    <h4>Optimization in Progress</h4>
+                    <p>The AI is currently analyzing your account and generating optimization recommendations. This may take a few minutes.</p>
+                    <div class="progress mt-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="mt-2">You can stay on this page or come back later to view the results.</p>
+                </div>
+            {% elseif optimization_status == 'not_started' %}
+                <div class="alert alert-warning">
+                    <h4>Account Optimization</h4>
+                    <p>The AI can analyze your entire account and provide comprehensive optimization recommendations across all campaigns, ad sets, and ads.</p>
+                    <a href="{{ url_for('meta_api.start_account_optimization', account_id=account.account_id) }}" class="btn btn-primary">Start AI Optimization</a>
+                </div>
+            {% else %}
+                <div class="alert alert-success">
+                    <h4>AI Analysis Summary</h4>
+                    <p>{{ optimization.summary }}</p>
+                    <div class="d-flex justify-content-between">
+                        <div>Confidence Score: <strong>{{ optimization.confidence_score }}%</strong></div>
+                        <div>Analysis Date: {{ optimization.analysis_date }}</div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Account Performance Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <canvas id="performanceChart" width="400" height="300"></canvas>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Key Metrics</h5>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Total Spend:</div>
+                                            <div>${{ account_metrics.total_spend|round(2) }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Average CPA:</div>
+                                            <div>${{ account_metrics.avg_cpa|round(2) }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Average CPL:</div>
+                                            <div>${{ account_metrics.avg_cpl|round(2) }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Total Conversions:</div>
+                                            <div>{{ account_metrics.total_conversions }}</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div>Average CTR:</div>
+                                            <div>{{ account_metrics.avg_ctr|round(2) }}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Budget Allocation Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if optimization.budget_recommendations %}
+                            <p>{{ optimization.budget_recommendations.summary }}</p>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Campaign</th>
+                                            <th>Current Budget</th>
+                                            <th>Recommended Budget</th>
+                                            <th>Change</th>
+                                            <th>Reasoning</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in optimization.budget_recommendations.campaigns %}
+                                            <tr>
+                                                <td>{{ item.name }}</td>
+                                                <td>${{ item.current_budget }}</td>
+                                                <td>${{ item.recommended_budget }}</td>
+                                                <td>
+                                                    {% if item.recommended_budget > item.current_budget %}
+                                                        <span class="text-success">+${{ (item.recommended_budget - item.current_budget)|round(2) }}</span>
+                                                    {% elseif item.recommended_budget < item.current_budget %}
+                                                        <span class="text-danger">-${{ (item.current_budget - item.recommended_budget)|round(2) }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">No change</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ item.reasoning }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p>No budget allocation recommendations available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Campaign Status Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if optimization.campaign_status_recommendations %}
+                            <p>{{ optimization.campaign_status_recommendations.summary }}</p>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Campaign</th>
+                                            <th>Current Status</th>
+                                            <th>Recommended Action</th>
+                                            <th>Reasoning</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in optimization.campaign_status_recommendations.campaigns %}
+                                            <tr>
+                                                <td>{{ item.name }}</td>
+                                                <td>
+                                                    {% if item.current_status == 'ACTIVE' %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% elseif item.current_status == 'PAUSED' %}
+                                                        <span class="badge bg-warning">Paused</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ item.current_status }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if item.recommended_action == 'ACTIVATE' %}
+                                                        <span class="badge bg-success">Activate</span>
+                                                    {% elseif item.recommended_action == 'PAUSE' %}
+                                                        <span class="badge bg-warning">Pause</span>
+                                                    {% elseif item.recommended_action == 'ARCHIVE' %}
+                                                        <span class="badge bg-danger">Archive</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">No Change</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ item.reasoning }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p>No campaign status recommendations available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Targeting Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if optimization.targeting_recommendations %}
+                            <p>{{ optimization.targeting_recommendations.summary }}</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Top Performing Audiences</h6>
+                                    <ul class="list-group">
+                                        {% for item in optimization.targeting_recommendations.top_audiences %}
+                                            <li class="list-group-item">
+                                                <div><strong>{{ item.name }}</strong></div>
+                                                <div>CPA: ${{ item.cpa|round(2) }} | CTR: {{ item.ctr|round(2) }}%</div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Recommended Audience Expansions</h6>
+                                    <ul class="list-group">
+                                        {% for item in optimization.targeting_recommendations.audience_expansions %}
+                                            <li class="list-group-item">{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p>No targeting recommendations available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Creative Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if optimization.creative_recommendations %}
+                            <p>{{ optimization.creative_recommendations.summary }}</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Top Performing Creatives</h6>
+                                    <ul class="list-group">
+                                        {% for item in optimization.creative_recommendations.top_creatives %}
+                                            <li class="list-group-item">
+                                                <div><strong>{{ item.name }}</strong></div>
+                                                <div>CTR: {{ item.ctr|round(2) }}% | CPC: ${{ item.cpc|round(2) }}</div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Creative Improvement Suggestions</h6>
+                                    <ul class="list-group">
+                                        {% for item in optimization.creative_recommendations.suggestions %}
+                                            <li class="list-group-item">{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p>No creative recommendations available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('meta_api.accounts') }}" class="btn btn-secondary">Back to Accounts</a>
+                    <div>
+                        <a href="{{ url_for('meta_api.execute_account_optimization', account_id=account.account_id) }}" class="btn btn-success">Apply All Recommendations</a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#selectiveApplyModal">
+                            Apply Selected Recommendations
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Modal for Selective Apply -->
+                <div class="modal fade" id="selectiveApplyModal" tabindex="-1" aria-labelledby="selectiveApplyModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="selectiveApplyModalLabel">Apply Selected Recommendations</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ url_for('meta_api.execute_selective_account_optimization', account_id=account.account_id) }}" method="post">
+                                <div class="modal-body">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" name="apply_budget" id="applyBudget" value="1">
+                                        <label class="form-check-label" for="applyBudget">
+                                            Apply Budget Allocation Recommendations
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" name="apply_campaign_status" id="applyCampaignStatus" value="1">
+                                        <label class="form-check-label" for="applyCampaignStatus">
+                                            Apply Campaign Status Recommendations
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" name="apply_targeting" id="applyTargeting" value="1">
+                                        <label class="form-check-label" for="applyTargeting">
+                                            Apply Targeting Recommendations
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Apply Selected</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if optimization_status == 'completed' %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ performance_data.dates|tojson }},
+                datasets: [
+                    {
+                        label: 'Spend ($)',
+                        data: {{ performance_data.spend|tojson }},
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'CPA ($)',
+                        data: {{ performance_data.cpa|tojson }},
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'Conversions',
+                        data: {{ performance_data.conversions|tojson }},
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        yAxisID: 'y2',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Spend ($)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'CPA ($)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                    y2: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Conversions'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                }
+            }
+        });
+    });
+    {% endif %}
+    
+    {% if optimization_status == 'in_progress' %}
+    // Auto-refresh the page every 10 seconds to check optimization status
+    setTimeout(function() {
+        window.location.reload();
+    }, 10000);
+    {% endif %}
+</script>
+{% endblock %}
+{% endblock %}

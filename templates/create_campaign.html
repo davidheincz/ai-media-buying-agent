@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Create Campaign - AI Media Buying Agent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.accounts') }}">Ad Accounts</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.campaigns', account_id=account_id) }}">Campaigns</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Campaign</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Create New Campaign</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('meta_api.create_campaign', account_id=account_id) }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Campaign Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="objective" class="form-label">Campaign Objective</label>
+                            <select class="form-select" id="objective" name="objective" required>
+                                <option value="" selected disabled>Select an objective</option>
+                                <option value="CONVERSIONS">Conversions</option>
+                                <option value="TRAFFIC">Traffic</option>
+                                <option value="APP_INSTALLS">App Installs</option>
+                                <option value="LEAD_GENERATION">Lead Generation</option>
+                                <option value="REACH">Reach</option>
+                                <option value="BRAND_AWARENESS">Brand Awareness</option>
+                                <option value="VIDEO_VIEWS">Video Views</option>
+                                <option value="POST_ENGAGEMENT">Post Engagement</option>
+                                <option value="PAGE_LIKES">Page Likes</option>
+                                <option value="EVENT_RESPONSES">Event Responses</option>
+                                <option value="MESSAGES">Messages</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="daily_budget" class="form-label">Daily Budget ($)</label>
+                            <input type="number" class="form-control" id="daily_budget" name="daily_budget" min="1" step="0.01" required>
+                            <div class="form-text">Minimum daily budget is $1.00</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="bid_strategy" class="form-label">Bid Strategy</label>
+                            <select class="form-select" id="bid_strategy" name="bid_strategy" required>
+                                <option value="" selected disabled>Select a bid strategy</option>
+                                <option value="LOWEST_COST_WITHOUT_CAP">Lowest Cost (without bid cap)</option>
+                                <option value="LOWEST_COST_WITH_BID_CAP">Lowest Cost (with bid cap)</option>
+                                <option value="COST_CAP">Cost Cap</option>
+                                <option value="BID_CAP">Bid Cap</option>
+                                <option value="TARGET_COST">Target Cost</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3 bid-cap-field" style="display: none;">
+                            <label for="bid_amount" class="form-label">Bid Cap Amount ($)</label>
+                            <input type="number" class="form-control" id="bid_amount" name="bid_amount" min="0.01" step="0.01">
+                            <div class="form-text">Maximum amount you're willing to pay per optimization event</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="campaign_type" class="form-label">Campaign Type</label>
+                            <select class="form-select" id="campaign_type" name="campaign_type" required>
+                                <option value="REGULAR" selected>Regular</option>
+                                <option value="AB_TEST">A/B Test</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Special Ad Categories</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="special_ad_categories_none" name="special_ad_categories" value="NONE" checked>
+                                <label class="form-check-label" for="special_ad_categories_none">
+                                    None
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="special_ad_categories_credit" name="special_ad_categories" value="CREDIT">
+                                <label class="form-check-label" for="special_ad_categories_credit">
+                                    Credit
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="special_ad_categories_employment" name="special_ad_categories" value="EMPLOYMENT">
+                                <label class="form-check-label" for="special_ad_categories_employment">
+                                    Employment
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="special_ad_categories_housing" name="special_ad_categories" value="HOUSING">
+                                <label class="form-check-label" for="special_ad_categories_housing">
+                                    Housing
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="special_ad_categories_political" name="special_ad_categories" value="POLITICAL">
+                                <label class="form-check-label" for="special_ad_categories_political">
+                                    Political
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="kpi_target_cpa" class="form-label">KPI Target - Cost Per Acquisition ($)</label>
+                            <input type="number" class="form-control" id="kpi_target_cpa" name="kpi_target_cpa" min="0.01" step="0.01">
+                            <div class="form-text">Target CPA for AI optimization (optional)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="kpi_target_cpl" class="form-label">KPI Target - Cost Per Lead ($)</label>
+                            <input type="number" class="form-control" id="kpi_target_cpl" name="kpi_target_cpl" min="0.01" step="0.01">
+                            <div class="form-text">Target CPL for AI optimization (optional)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="ai_optimization" name="ai_optimization" value="1" checked>
+                                <label class="form-check-label" for="ai_optimization">
+                                    Enable AI Optimization
+                                </label>
+                                <div class="form-text">Allow the AI to automatically optimize this campaign based on performance</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('meta_api.campaigns', account_id=account_id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Campaign</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle bid strategy selection
+        const bidStrategySelect = document.getElementById('bid_strategy');
+        const bidCapField = document.querySelector('.bid-cap-field');
+        
+        bidStrategySelect.addEventListener('change', function() {
+            if (this.value === 'LOWEST_COST_WITH_BID_CAP' || this.value === 'BID_CAP' || this.value === 'COST_CAP') {
+                bidCapField.style.display = 'block';
+                document.getElementById('bid_amount').required = true;
+            } else {
+                bidCapField.style.display = 'none';
+                document.getElementById('bid_amount').required = false;
+            }
+        });
+        
+        // Handle special ad categories
+        const specialAdCategoriesNone = document.getElementById('special_ad_categories_none');
+        const otherSpecialAdCategories = document.querySelectorAll('input[name="special_ad_categories"]:not([value="NONE"])');
+        
+        specialAdCategoriesNone.addEventListener('change', function() {
+            if (this.checked) {
+                otherSpecialAdCategories.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+        });
+        
+        otherSpecialAdCategories.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    specialAdCategoriesNone.checked = false;
+                }
+                
+                // If no other categories are selected, check "None"
+                const anyOtherChecked = Array.from(otherSpecialAdCategories).some(cb => cb.checked);
+                if (!anyOtherChecked) {
+                    specialAdCategoriesNone.checked = true;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

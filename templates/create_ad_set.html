@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Create Ad Set - AI Media Buying Agent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.accounts') }}">Ad Accounts</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.campaigns', account_id=campaign.account_id) }}">Campaigns</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.campaign_details', campaign_id=campaign.campaign_id) }}">{{ campaign.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Ad Set</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Create New Ad Set</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('meta_api.create_ad_set', campaign_id=campaign.campaign_id) }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Ad Set Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="daily_budget" class="form-label">Daily Budget ($)</label>
+                            <input type="number" class="form-control" id="daily_budget" name="daily_budget" min="1" step="0.01" required>
+                            <div class="form-text">Minimum daily budget is $1.00</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="start_time" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_time" name="start_time" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="end_time" class="form-label">End Date (Optional)</label>
+                            <input type="date" class="form-control" id="end_time" name="end_time">
+                            <div class="form-text">Leave blank for no end date</div>
+                        </div>
+                        
+                        <h4 class="mt-4 mb-3">Targeting</h4>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Demographics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Age Range</label>
+                                            <div class="d-flex">
+                                                <select class="form-select me-2" id="age_min" name="age_min" required>
+                                                    <option value="13">13</option>
+                                                    <option value="18" selected>18</option>
+                                                    <option value="21">21</option>
+                                                    <option value="25">25</option>
+                                                    <option value="30">30</option>
+                                                    <option value="35">35</option>
+                                                    <option value="40">40</option>
+                                                    <option value="45">45</option>
+                                                    <option value="50">50</option>
+                                                    <option value="55">55</option>
+                                                    <option value="60">60</option>
+                                                    <option value="65">65+</option>
+                                                </select>
+                                                <span class="align-self-center mx-2">to</span>
+                                                <select class="form-select" id="age_max" name="age_max" required>
+                                                    <option value="18">18</option>
+                                                    <option value="21">21</option>
+                                                    <option value="25">25</option>
+                                                    <option value="30">30</option>
+                                                    <option value="35">35</option>
+                                                    <option value="40">40</option>
+                                                    <option value="45">45</option>
+                                                    <option value="50">50</option>
+                                                    <option value="55">55</option>
+                                                    <option value="60">60</option>
+                                                    <option value="65" selected>65+</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Gender</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gender_all" name="gender" value="all" checked>
+                                                <label class="form-check-label" for="gender_all">All</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gender_male" name="gender" value="male">
+                                                <label class="form-check-label" for="gender_male">Male</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gender_female" name="gender" value="female">
+                                                <label class="form-check-label" for="gender_female">Female</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="locations" class="form-label">Locations</label>
+                                    <select class="form-select" id="locations" name="locations" multiple>
+                                        <option value="US" selected>United States</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="UK">United Kingdom</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="DE">Germany</option>
+                                        <option value="FR">France</option>
+                                    </select>
+                                    <div class="form-text">Hold Ctrl/Cmd to select multiple locations</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="languages" class="form-label">Languages (Optional)</label>
+                                    <select class="form-select" id="languages" name="languages" multiple>
+                                        <option value="EN" selected>English</option>
+                                        <option value="ES">Spanish</option>
+                                        <option value="FR">French</option>
+                                        <option value="DE">German</option>
+                                        <option value="IT">Italian</option>
+                                    </select>
+                                    <div class="form-text">Hold Ctrl/Cmd to select multiple languages</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Detailed Targeting</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="interests" class="form-label">Interests</label>
+                                    <textarea class="form-control" id="interests" name="interests" rows="3" placeholder="Enter interests separated by commas"></textarea>
+                                    <div class="form-text">Example: technology, digital marketing, social media</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="behaviors" class="form-label">Behaviors (Optional)</label>
+                                    <textarea class="form-control" id="behaviors" name="behaviors" rows="3" placeholder="Enter behaviors separated by commas"></textarea>
+                                    <div class="form-text">Example: frequent travelers, online shoppers</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="detailed_targeting_expansion" name="detailed_targeting_expansion" value="1" checked>
+                                        <label class="form-check-label" for="detailed_targeting_expansion">
+                                            Enable Detailed Targeting Expansion
+                                        </label>
+                                        <div class="form-text">Allows Facebook to show ads to people beyond your detailed targeting selections when it's likely to improve performance</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Placements</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="placements_type" id="automatic_placements" value="automatic" checked>
+                                        <label class="form-check-label" for="automatic_placements">
+                                            Automatic Placements (Recommended)
+                                        </label>
+                                        <div class="form-text">Facebook will automatically place your ads across Facebook, Instagram, Audience Network, and Messenger</div>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="placements_type" id="manual_placements" value="manual">
+                                        <label class="form-check-label" for="manual_placements">
+                                            Manual Placements
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="manual_placements_options" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">Facebook</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="placement_facebook_feed" name="placements" value="facebook_feed" checked>
+                                            <label class="form-check-label" for="placement_facebook_feed">Feed</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="placement_facebook_stories" name="placements" value="facebook_stories" checked>
+                                            <label class="form-check-label" for="placement_facebook_stories">Stories</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="placement_facebook_marketplace" name="placements" value="facebook_marketplace" checked>
+                                            <label class="form-check-label" for="placement_facebook_marketplace">Marketplace</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Instagram</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="placement_instagram_feed" name="placements" value="instagram_feed" checked>
+                                            <label class="form-check-label" for="placement_instagram_feed">Feed</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="placement_instagram_stories" name="placements" value="instagram_stories" checked>
+                                            <label class="form-check-label" for="placement_instagram_stories">Stories</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="placement_instagram_explore" name="placements" value="instagram_explore" checked>
+                                            <label class="form-check-label" for="placement_instagram_explore">Explore</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Optimization & Delivery</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="optimization_goal" class="form-label">Optimization Goal</label>
+                                    <select class="form-select" id="optimization_goal" name="optimization_goal" required>
+                                        <option value="CONVERSIONS" selected>Conversions</option>
+                                        <option value="LINK_CLICKS">Link Clicks</option>
+                                        <option value="IMPRESSIONS">Impressions</option>
+                                        <option value="REACH">Reach</option>
+                                        <option value="APP_INSTALLS">App Installs</option>
+                                        <option value="LEAD_GENERATION">Lead Generation</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="billing_event" class="form-label">Billing Event</label>
+                                    <select class="form-select" id="billing_event" name="billing_event" required>
+                                        <option value="IMPRESSIONS" selected>Impressions</option>
+                                        <option value="LINK_CLICKS">Link Clicks</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ai_optimization" name="ai_optimization" value="1" checked>
+                                        <label class="form-check-label" for="ai_optimization">
+                                            Enable AI Optimization
+                                        </label>
+                                        <div class="form-text">Allow the AI to automatically optimize this ad set based on performance</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('meta_api.campaign_details', campaign_id=campaign.campaign_id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Ad Set</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle placements type selection
+        const automaticPlacementsRadio = document.getElementById('automatic_placements');
+        const manualPlacementsRadio = document.getElementById('manual_placements');
+        const manualPlacementsOptions = document.getElementById('manual_placements_options');
+        
+        automaticPlacementsRadio.addEventListener('change', function() {
+            if (this.checked) {
+                manualPlacementsOptions.style.display = 'none';
+            }
+        });
+        
+        manualPlacementsRadio.addEventListener('change', function() {
+            if (this.checked) {
+                manualPlacementsOptions.style.display = 'block';
+            }
+        });
+        
+        // Handle gender selection
+        const genderAll = document.getElementById('gender_all');
+        const genderMale = document.getElementById('gender_male');
+        const genderFemale = document.getElementById('gender_female');
+        
+        genderAll.addEventListener('change', function() {
+            if (this.checked) {
+                genderMale.checked = false;
+                genderFemale.checked = false;
+            }
+        });
+        
+        [genderMale, genderFemale].forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    genderAll.checked = false;
+                }
+                
+                // If neither male nor female is checked, check "All"
+                if (!genderMale.checked && !genderFemale.checked) {
+                    genderAll.checked = true;
+                }
+            });
+        });
+        
+        // Validate age range
+        const ageMin = document.getElementById('age_min');
+        const ageMax = document.getElementById('age_max');
+        
+        ageMin.addEventListener('change', function() {
+            if (parseInt(this.value) > parseInt(ageMax.value)) {
+                ageMax.value = this.value;
+            }
+        });
+        
+        ageMax.addEventListener('change', function() {
+            if (parseInt(this.value) < parseInt(ageMin.value)) {
+                ageMin.value = this.value;
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

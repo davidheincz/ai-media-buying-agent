@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Create Ad - AI Media Buying Agent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.accounts') }}">Ad Accounts</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.campaigns', account_id=ad_set.campaign.account_id) }}">Campaigns</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.campaign_details', campaign_id=ad_set.campaign_id) }}">{{ ad_set.campaign.name }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.ad_set_details', ad_set_id=ad_set.ad_set_id) }}">{{ ad_set.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Ad</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Create New Ad</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('meta_api.create_ad', ad_set_id=ad_set.ad_set_id) }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Ad Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <h4 class="mt-4 mb-3">Identity</h4>
+                        
+                        <div class="mb-3">
+                            <label for="page_id" class="form-label">Facebook Page</label>
+                            <select class="form-select" id="page_id" name="page_id" required>
+                                {% for page in facebook_pages %}
+                                    <option value="{{ page.id }}">{{ page.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="instagram_account_id" class="form-label">Instagram Account (Optional)</label>
+                            <select class="form-select" id="instagram_account_id" name="instagram_account_id">
+                                <option value="">None</option>
+                                {% for account in instagram_accounts %}
+                                    <option value="{{ account.id }}">{{ account.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <h4 class="mt-4 mb-3">Ad Format</h4>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="ad_format" id="format_single_image" value="single_image" checked>
+                                <label class="form-check-label" for="format_single_image">
+                                    Single Image
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="ad_format" id="format_carousel" value="carousel">
+                                <label class="form-check-label" for="format_carousel">
+                                    Carousel
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="ad_format" id="format_video" value="video">
+                                <label class="form-check-label" for="format_video">
+                                    Video
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="single_image_section">
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Upload Image</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text">Recommended size: 1200 x 628 pixels</div>
+                            </div>
+                        </div>
+                        
+                        <div id="carousel_section" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Carousel Images (2-10 images)</label>
+                                <div id="carousel_images_container">
+                                    <div class="mb-2">
+                                        <input type="file" class="form-control" name="carousel_images[]" accept="image/*">
+                                    </div>
+                                    <div class="mb-2">
+                                        <input type="file" class="form-control" name="carousel_images[]" accept="image/*">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add_carousel_image">Add Another Image</button>
+                                <div class="form-text">Recommended size: 1080 x 1080 pixels (square)</div>
+                            </div>
+                        </div>
+                        
+                        <div id="video_section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="video" class="form-label">Upload Video</label>
+                                <input type="file" class="form-control" id="video" name="video" accept="video/*">
+                                <div class="form-text">Recommended length: 15-30 seconds</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="video_thumbnail" class="form-label">Video Thumbnail (Optional)</label>
+                                <input type="file" class="form-control" id="video_thumbnail" name="video_thumbnail" accept="image/*">
+                            </div>
+                        </div>
+                        
+                        <h4 class="mt-4 mb-3">Ad Creative</h4>
+                        
+                        <div class="mb-3">
+                            <label for="headline" class="form-label">Headline</label>
+                            <input type="text" class="form-control" id="headline" name="headline" maxlength="40" required>
+                            <div class="form-text">Maximum 40 characters</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="primary_text" class="form-label">Primary Text</label>
+                            <textarea class="form-control" id="primary_text" name="primary_text" rows="3" maxlength="125" required></textarea>
+                            <div class="form-text">Maximum 125 characters recommended</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <input type="text" class="form-control" id="description" name="description" maxlength="30">
+                            <div class="form-text">Maximum 30 characters</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="call_to_action" class="form-label">Call to Action</label>
+                            <select class="form-select" id="call_to_action" name="call_to_action" required>
+                                <option value="LEARN_MORE" selected>Learn More</option>
+                                <option value="SHOP_NOW">Shop Now</option>
+                                <option value="SIGN_UP">Sign Up</option>
+                                <option value="DOWNLOAD">Download</option>
+                                <option value="BOOK_TRAVEL">Book Now</option>
+                                <option value="CONTACT_US">Contact Us</option>
+                                <option value="SUBSCRIBE">Subscribe</option>
+                                <option value="APPLY_NOW">Apply Now</option>
+                                <option value="GET_OFFER">Get Offer</option>
+                                <option value="GET_QUOTE">Get Quote</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="website_url" class="form-label">Destination URL</label>
+                            <input type="url" class="form-control" id="website_url" name="website_url" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="ai_creative_suggestions" name="ai_creative_suggestions" value="1" checked>
+                                <label class="form-check-label" for="ai_creative_suggestions">
+                                    Get AI Creative Suggestions
+                                </label>
+                                <div class="form-text">The AI will analyze your ad and suggest improvements to increase performance</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="ai_optimization" name="ai_optimization" value="1" checked>
+                                <label class="form-check-label" for="ai_optimization">
+                                    Enable AI Optimization
+                                </label>
+                                <div class="form-text">Allow the AI to automatically optimize this ad based on performance</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('meta_api.ad_set_details', ad_set_id=ad_set.ad_set_id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Ad</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle ad format selection
+        const formatSingleImage = document.getElementById('format_single_image');
+        const formatCarousel = document.getElementById('format_carousel');
+        const formatVideo = document.getElementById('format_video');
+        
+        const singleImageSection = document.getElementById('single_image_section');
+        const carouselSection = document.getElementById('carousel_section');
+        const videoSection = document.getElementById('video_section');
+        
+        formatSingleImage.addEventListener('change', function() {
+            if (this.checked) {
+                singleImageSection.style.display = 'block';
+                carouselSection.style.display = 'none';
+                videoSection.style.display = 'none';
+            }
+        });
+        
+        formatCarousel.addEventListener('change', function() {
+            if (this.checked) {
+                singleImageSection.style.display = 'none';
+                carouselSection.style.display = 'block';
+                videoSection.style.display = 'none';
+            }
+        });
+        
+        formatVideo.addEventListener('change', function() {
+            if (this.checked) {
+                singleImageSection.style.display = 'none';
+                carouselSection.style.display = 'none';
+                videoSection.style.display = 'block';
+            }
+        });
+        
+        // Handle adding more carousel images
+        const addCarouselImageBtn = document.getElementById('add_carousel_image');
+        const carouselImagesContainer = document.getElementById('carousel_images_container');
+        
+        addCarouselImageBtn.addEventListener('click', function() {
+            const imageInputs = carouselImagesContainer.querySelectorAll('input[type="file"]');
+            
+            if (imageInputs.length < 10) {
+                const newInput = document.createElement('div');
+                newInput.className = 'mb-2';
+                newInput.innerHTML = '<input type="file" class="form-control" name="carousel_images[]" accept="image/*">';
+                carouselImagesContainer.appendChild(newInput);
+            }
+            
+            if (carouselImagesContainer.querySelectorAll('input[type="file"]').length >= 10) {
+                addCarouselImageBtn.disabled = true;
+            }
+        });
+        
+        // Character counters for text fields
+        const headlineInput = document.getElementById('headline');
+        const primaryTextInput = document.getElementById('primary_text');
+        const descriptionInput = document.getElementById('description');
+        
+        function createCharCounter(input, maxLength) {
+            const counter = document.createElement('div');
+            counter.className = 'text-muted small mt-1';
+            counter.textContent = `${input.value.length}/${maxLength} characters`;
+            input.parentNode.insertBefore(counter, input.nextSibling);
+            
+            input.addEventListener('input', function() {
+                counter.textContent = `${input.value.length}/${maxLength} characters`;
+                if (input.value.length > maxLength) {
+                    counter.classList.add('text-danger');
+                } else {
+                    counter.classList.remove('text-danger');
+                }
+            });
+        }
+        
+        createCharCounter(headlineInput, 40);
+        createCharCounter(primaryTextInput, 125);
+        createCharCounter(descriptionInput, 30);
+    });
+</script>
+{% endblock %}
+{% endblock %}

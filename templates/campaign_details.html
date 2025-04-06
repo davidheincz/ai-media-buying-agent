@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Campaign Details - AI Media Buying Agent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.accounts') }}">Ad Accounts</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('meta_api.campaigns', account_id=campaign.account_id) }}">Campaigns</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Campaign Details</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ campaign.name }}</h1>
+                <div>
+                    <span class="badge bg-primary">Campaign ID: {{ campaign.campaign_id }}</span>
+                    {% if campaign.status == 'ACTIVE' %}
+                        <span class="badge bg-success">Active</span>
+                    {% elif campaign.status == 'PAUSED' %}
+                        <span class="badge bg-warning">Paused</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ campaign.status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Budget</h5>
+                            <p class="card-text display-6">${{ campaign.daily_budget }}</p>
+                            <p class="text-muted">Daily Budget</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Performance</h5>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <p class="card-text display-6">${{ campaign.cpa|round(2) }}</p>
+                                    <p class="text-muted">Cost Per Acquisition</p>
+                                </div>
+                                <div>
+                                    <p class="card-text display-6">${{ campaign.cpl|round(2) }}</p>
+                                    <p class="text-muted">Cost Per Lead</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Results</h5>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <p class="card-text display-6">{{ campaign.conversions }}</p>
+                                    <p class="text-muted">Conversions</p>
+                                </div>
+                                <div>
+                                    <p class="card-text display-6">${{ campaign.spend|round(2) }}</p>
+                                    <p class="text-muted">Total Spend</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Campaign Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th>Objective</th>
+                                        <td>{{ campaign.objective }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Bid Strategy</th>
+                                        <td>{{ campaign.bid_strategy }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Created</th>
+                                        <td>{{ campaign.created_at }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Modified</th>
+                                        <td>{{ campaign.updated_at }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th>Special Ad Categories</th>
+                                        <td>{{ campaign.special_ad_categories|join(', ') if campaign.special_ad_categories else 'None' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Campaign Type</th>
+                                        <td>{{ campaign.campaign_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Budget Remaining</th>
+                                        <td>${{ campaign.budget_remaining|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>KPI Target</th>
+                                        <td>
+                                            {% if campaign.kpi_target %}
+                                                CPA: ${{ campaign.kpi_target.cpa|round(2) }} | CPL: ${{ campaign.kpi_target.cpl|round(2) }}
+                                            {% else %}
+                                                Not set
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Ad Sets</h5>
+                    <a href="{{ url_for('meta_api.create_ad_set', campaign_id=campaign.campaign_id) }}" class="btn btn-sm btn-primary">Create Ad Set</a>
+                </div>
+                <div class="card-body">
+                    {% if ad_sets %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                        <th>Budget</th>
+                                        <th>Impressions</th>
+                                        <th>Clicks</th>
+                                        <th>CTR</th>
+                                        <th>CPC</th>
+                                        <th>Conversions</th>
+                                        <th>CPA</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ad_set in ad_sets %}
+                                        <tr>
+                                            <td>{{ ad_set.name }}</td>
+                                            <td>
+                                                {% if ad_set.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% elif ad_set.status == 'PAUSED' %}
+                                                    <span class="badge bg-warning">Paused</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ ad_set.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>${{ ad_set.daily_budget }}</td>
+                                            <td>{{ ad_set.impressions }}</td>
+                                            <td>{{ ad_set.clicks }}</td>
+                                            <td>{{ (ad_set.clicks / ad_set.impressions * 100)|round(2) if ad_set.impressions else 0 }}%</td>
+                                            <td>${{ (ad_set.spend / ad_set.clicks)|round(2) if ad_set.clicks else 0 }}</td>
+                                            <td>{{ ad_set.conversions }}</td>
+                                            <td>${{ (ad_set.spend / ad_set.conversions)|round(2) if ad_set.conversions else 0 }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('meta_api.ad_set_details', ad_set_id=ad_set.ad_set_id) }}" class="btn btn-sm btn-primary">View</a>
+                                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="{{ url_for('meta_api.edit_ad_set', ad_set_id=ad_set.ad_set_id) }}">Edit</a></li>
+                                                        {% if ad_set.status == 'ACTIVE' %}
+                                                            <li><a class="dropdown-item" href="{{ url_for('meta_api.pause_ad_set', ad_set_id=ad_set.ad_set_id) }}">Pause</a></li>
+                                                        {% elif ad_set.status == 'PAUSED' %}
+                                                            <li><a class="dropdown-item" href="{{ url_for('meta_api.activate_ad_set', ad_set_id=ad_set.ad_set_id) }}">Activate</a></li>
+                                                        {% endif %}
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li><a class="dropdown-item text-danger" href="{{ url_for('meta_api.delete_ad_set', ad_set_id=ad_set.ad_set_id) }}">Delete</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p>This campaign doesn't have any ad sets yet.</p>
+                            <a href="{{ url_for('meta_api.create_ad_set', campaign_id=campaign.campaign_id) }}" class="btn btn-primary">Create Ad Set</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Performance Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <a href="{{ url_for('meta_api.campaigns', account_id=campaign.account_id) }}" class="btn btn-secondary">Back to Campaigns</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('meta_api.evaluate_campaign', campaign_id=campaign.campaign_id) }}" class="btn btn-primary">AI Evaluate Campaign</a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Campaign Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('meta_api.edit_campaign', campaign_id=campaign.campaign_id) }}">Edit Campaign</a></li>
+                            {% if campaign.status == 'ACTIVE' %}
+                                <li><a class="dropdown-item" href="{{ url_for('meta_api.pause_campaign', campaign_id=campaign.campaign_id) }}">Pause Campaign</a></li>
+                            {% elif campaign.status == 'PAUSED' %}
+                                <li><a class="dropdown-item" href="{{ url_for('meta_api.activate_campaign', campaign_id=campaign.campaign_id) }}">Activate Campaign</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('meta_api.duplicate_campaign', campaign_id=campaign.campaign_id) }}">Duplicate Campaign</a></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('meta_api.delete_campaign', campaign_id=campaign.campaign_id) }}">Delete Campaign</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ dates|tojson }},
+                datasets: [
+                    {
+                        label: 'Spend ($)',
+                        data: {{ spend_data|tojson }},
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'CPA ($)',
+                        data: {{ cpa_data|tojson }},
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'Conversions',
+                        data: {{ conversions_data|tojson }},
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        yAxisID: 'y2',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Spend ($)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'CPA ($)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                    y2: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Conversions'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
