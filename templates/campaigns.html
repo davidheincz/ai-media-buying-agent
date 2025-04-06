@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Facebook Ad Campaigns</h2>
+    
+    <!-- Account Selection -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Select Ad Account
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('select_ad_account') }}" method="post">
+                <div class="form-group">
+                    <label for="ad_account">Ad Account</label>
+                    <select class="form-control" id="ad_account" name="ad_account_id">
+                        {% for account in ad_accounts %}
+                            <option value="{{ account.id }}" {% if account.id == selected_account_id %}selected{% endif %}>
+                                {{ account.name }} ({{ account.id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Select Account</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Campaigns List -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Campaigns</span>
+            <a href="{{ url_for('create_campaign') }}" class="btn btn-sm btn-success">Create Campaign</a>
+        </div>
+        <div class="card-body">
+            {% if campaigns %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Budget</th>
+                                <th>Objective</th>
+                                <th>Impressions</th>
+                                <th>Clicks</th>
+                                <th>CPA</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for campaign in campaigns %}
+                            <tr>
+                                <td>{{ campaign.name }}</td>
+                                <td>
+                                    <span class="badge {% if campaign.status == 'ACTIVE' %}bg-success{% elif campaign.status == 'PAUSED' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ campaign.status }}
+                                    </span>
+                                </td>
+                                <td>${{ campaign.daily_budget }}</td>
+                                <td>{{ campaign.objective }}</td>
+                                <td>{{ campaign.impressions|default('0', true) }}</td>
+                                <td>{{ campaign.clicks|default('0', true) }}</td>
+                                <td>${{ campaign.cpa|default('0.00', true) }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('view_campaign', campaign_id=campaign.id) }}" class="btn btn-sm btn-info">View</a>
+                                        <a href="{{ url_for('edit_campaign', campaign_id=campaign.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                        <a href="{{ url_for('evaluate_campaign', campaign_id=campaign.id) }}" class="btn btn-sm btn-warning">AI Evaluate</a>
+                                        <a href="{{ url_for('delete_campaign', campaign_id=campaign.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this campaign?');">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No campaigns found for this account.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Performance Overview -->
+    <div class="card mt-4">
+        <div class="card-header">
+            Performance Overview
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Impressions</h5>
+                            <p class="card-text display-6">{{ total_impressions|default('0', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Clicks</h5>
+                            <p class="card-text display-6">{{ total_clicks|default('0', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Conversions</h5>
+                            <p class="card-text display-6">{{ total_conversions|default('0', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Avg. CPA</h5>
+                            <p class="card-text display-6">${{ avg_cpa|default('0.00', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Optimization Button -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('optimize_account') }}" class="btn btn-lg btn-primary">
+                    <i class="fas fa-robot mr-2"></i> AI Optimize Account
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
