@@ -1,25 +1,22 @@
 {
-  "name": "AI Media Buying Agent with DeepSeek",
-  "description": "An AI-driven media buying agent that connects to Facebook Ads and DeepSeek to automatically manage ads based on uploaded knowledge documents.",
-  "repository": "https://github.com/yourusername/ai-media-buying-agent",
-  "logo": "https://raw.githubusercontent.com/yourusername/ai-media-buying-agent/main/logo.png",
-  "keywords": ["facebook-ads", "media-buying", "ai", "deepseek", "automation"],
+  "name": "AI Media Buying Agent",
+  "description": "AI-driven media buying agent that connects to Facebook Ads and DeepSeek AI",
+  "repository": "https://github.com/davidheincz/ai-media-buying-agent",
+  "logo": "https://raw.githubusercontent.com/davidheincz/ai-media-buying-agent/main/logo.png",
+  "keywords": ["python", "flask", "ai", "media-buying", "facebook-ads", "deepseek"],
   "env": {
     "DEEPSEEK_API_KEY": {
       "description": "Your DeepSeek API key",
-      "value": "deepseek_api_key_placeholder",
       "required": true
     },
     "SECRET_KEY": {
-      "description": "Secret key for application security",
-      "generator": "secret",
-      "required": true
+      "description": "Secret key for Flask sessions",
+      "generator": "secret"
     }
   },
   "addons": [
     {
-      "plan": "heroku-postgresql:hobby-dev",
-      "as": "DATABASE"
+      "plan": "heroku-postgresql:mini"
     }
   ],
   "buildpacks": [
@@ -27,6 +24,5 @@
       "url": "heroku/python"
     }
   ],
-  "stack": "container",
   "success_url": "/register"
 }
