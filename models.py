@@ -24,7 +24,7 @@ class AdAccount(db.Model):
     access_token = db.Column(db.String(500), nullable=False)
     target_cpa = db.Column(db.Float, nullable=True)
     target_cpl = db.Column(db.Float, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -70,7 +70,7 @@ class Document(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=True)
     file_path = db.Column(db.String(500), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
