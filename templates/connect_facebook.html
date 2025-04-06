@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Connect to Facebook{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Connect to Facebook Ads</h2>
+    
+    <div class="card">
+        <div class="card-header">
+            Facebook Ads Connection
+        </div>
+        <div class="card-body">
+            <p>To manage your Facebook Ads campaigns, you need to connect your Facebook account and grant access to your ad accounts.</p>
+            
+            {% if not connected %}
+                <div class="alert alert-info">
+                    You are not currently connected to Facebook Ads.
+                </div>
+                
+                <a href="{{ url_for('facebook_auth') }}" class="btn btn-primary btn-lg">
+                    <i class="fab fa-facebook mr-2"></i> Connect to Facebook
+                </a>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        By connecting, you'll grant this application permission to:
+                        <ul>
+                            <li>View your ad accounts</li>
+                            <li>Read campaign data</li>
+                            <li>Create and modify campaigns</li>
+                            <li>Adjust budgets and targeting</li>
+                        </ul>
+                        You can revoke access at any time from your Facebook settings.
+                    </small>
+                </div>
+            {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle mr-2"></i> You are connected to Facebook Ads.
+                </div>
+                
+                <h5>Connected Ad Accounts</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Account ID</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in ad_accounts %}
+                            <tr>
+                                <td>{{ account.name }}</td>
+                                <td>{{ account.id }}</td>
+                                <td>
+                                    <span class="badge {% if account.status == 'ACTIVE' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ account.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_account', account_id=account.id) }}" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('disconnect_facebook') }}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to disconnect from Facebook?');">
+                        <i class="fas fa-unlink mr-2"></i> Disconnect from Facebook
+                    </a>
+                    <a href="{{ url_for('refresh_facebook_token') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sync mr-2"></i> Refresh Connection
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

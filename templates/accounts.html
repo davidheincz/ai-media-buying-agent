@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Ad Accounts{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Facebook Ad Accounts</h2>
+    
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Your Ad Accounts</span>
+            <a href="{{ url_for('connect_facebook') }}" class="btn btn-sm btn-primary">
+                <i class="fab fa-facebook mr-2"></i> Connect More Accounts
+            </a>
+        </div>
+        <div class="card-body">
+            {% if accounts %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Account ID</th>
+                                <th>Status</th>
+                                <th>Campaigns</th>
+                                <th>Daily Spend</th>
+                                <th>Target KPI</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in accounts %}
+                            <tr>
+                                <td>{{ account.name }}</td>
+                                <td>{{ account.id }}</td>
+                                <td>
+                                    <span class="badge {% if account.status == 'ACTIVE' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ account.status }}
+                                    </span>
+                                </td>
+                                <td>{{ account.campaign_count }}</td>
+                                <td>${{ account.daily_spend|default('0.00', true) }}</td>
+                                <td>
+                                    {% if account.target_kpi %}
+                                        {{ account.target_kpi_type }}: ${{ account.target_kpi }}
+                                    {% else %}
+                                        Not set
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('view_account', account_id=account.id) }}" class="btn btn-sm btn-info">View</a>
+                                        <a href="{{ url_for('edit_account', account_id=account.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                        <a href="{{ url_for('disconnect_account', account_id=account.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to disconnect this account?');">Disconnect</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <p>You don't have any connected Facebook Ad accounts yet.</p>
+                    <a href="{{ url_for('connect_facebook') }}" class="btn btn-primary">
+                        <i class="fab fa-facebook mr-2"></i> Connect to Facebook
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Account Performance Overview -->
+    {% if accounts %}
+    <div class="card mt-4">
+        <div class="card-header">
+            Performance Overview
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Accounts</h5>
+                            <p class="card-text display-6">{{ accounts|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Campaigns</h5>
+                            <p class="card-text display-6">{{ total_campaigns|default('0', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Daily Spend</h5>
+                            <p class="card-text display-6">${{ total_spend|default('0.00', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Avg. CPA</h5>
+                            <p class="card-text display-6">${{ avg_cpa|default('0.00', true) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- KPI Settings -->
+    <div class="card mt-4">
+        <div class="card-header">
+            KPI Settings
+        </div>
+        <div class="card-body">
+            <p>Set target KPIs for each of your ad accounts to help the AI optimize your campaigns.</p>
+            
+            <form action="{{ url_for('update_kpi_settings') }}" method="post">
+                {% if accounts %}
+                    {% for account in accounts %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            {{ account.name }} ({{ account.id }})
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="kpi_type_{{ account.id }}">KPI Type</label>
+                                        <select class="form-control" id="kpi_type_{{ account.id }}" name="kpi_type_{{ account.id }}">
+                                            <option value="CPA" {% if account.target_kpi_type == 'CPA' %}selected{% endif %}>Cost Per Acquisition (CPA)</option>
+                                            <option value="CPL" {% if account.target_kpi_type == 'CPL' %}selected{% endif %}>Cost Per Lead (CPL)</option>
+                                            <option value="ROAS" {% if account.target_kpi_type == 'ROAS' %}selected{% endif %}>Return On Ad Spend (ROAS)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="kpi_value_{{ account.id }}">Target Value</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            <input type="number" step="0.01" class="form-control" id="kpi_value_{{ account.id }}" name="kpi_value_{{ account.id }}" value="{{ account.target_kpi|default('', true) }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-primary">Save KPI Settings</button>
+                {% else %}
+                    <div class="alert alert-info">
+                        Connect to Facebook Ad accounts first to set KPI targets.
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
