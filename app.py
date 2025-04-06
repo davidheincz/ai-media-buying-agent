@@ -8,6 +8,7 @@ import json
 from models import db, User, AdAccount, Campaign, AdSet, CampaignMetric, Document, KnowledgeItem, Decision
 import os
 from deepseek_integration.integration import AIMediaBuyingAgent
+from facebook_ads_manager.routes import register_meta_api_blueprint
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
@@ -58,6 +59,9 @@ try:
 except Exception as e:
     app.logger.error(f"Error initializing AI Media Buying Agent: {str(e)}")
     ai_agent = None
+
+# Register Meta API Blueprint
+register_meta_api_blueprint(app)
 
 # Routes
 @app.route('/')
@@ -321,4 +325,3 @@ def reject_decision(decision_id):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
