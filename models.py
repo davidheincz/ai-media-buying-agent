@@ -95,3 +95,15 @@ class Decision(db.Model):
     status = db.Column(db.String(50), nullable=False)  # pending, approved, rejected, executed
     account_id = db.Column(db.Integer, db.ForeignKey('ad_account.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class FacebookAccount(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    account_id = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(200), nullable=True)
+    access_token = db.Column(db.Text, nullable=False)
+    token_expires_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('facebook_accounts', lazy=True))
