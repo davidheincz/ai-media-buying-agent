@@ -33,7 +33,7 @@ import click
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    db.create_all()
+    db.create_all(checkfirst=True)
     click.echo('Initialized the database.')
 
 app.cli.add_command(init_db_command)
